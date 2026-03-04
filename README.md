@@ -141,12 +141,38 @@ cargo clippy -- -D warnings
 ```
 
 
-## Deployment
+
+## Deployment to Heroku
 
 * Run and test locally first — port configurable via `--port` CLI flag or `PORT` env var (Heroku convention)
-* Deploy on Heroku using Rust buildpack
-* `PORT` env var takes precedence over CLI flag when set
-* Procfile included
+
+### Prerequisites
+
+- Heroku CLI installed
+- Heroku account
+
+### Steps
+
+1. Create a new Heroku app:
+```bash
+heroku create your-app-name
+```
+
+2. Set the buildpack:
+```bash
+heroku buildpacks:set emk/rust
+```
+
+3. Deploy:
+```bash
+git push heroku main
+```
+
+4. Open your app:
+```bash
+heroku open
+```
+
 
 
 ## Non-goals
