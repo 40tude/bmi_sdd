@@ -19,9 +19,9 @@
 
 **Purpose**: Cargo project initialization and directory structure
 
-- [ ] T001 Create Cargo.toml with all production deps (axum, tokio, serde+serde_json, clap, tracing, tracing-subscriber, thiserror, anyhow) and dev-deps (reqwest with json feature, tokio test runtime) in Cargo.toml
-- [ ] T002 [P] Create src/lib.rs with module declarations (`mod domain; mod api; mod ui;`) and stub `pub fn build_router() -> axum::Router` returning empty Router in src/lib.rs
-- [ ] T003 [P] Create tests/integration/api_test.rs with test module skeleton and shared `async fn spawn_server() -> String` helper that binds to 127.0.0.1:0 and returns base URL in tests/integration/api_test.rs
+- [X] T001 Create Cargo.toml with all production deps (axum, tokio, serde+serde_json, clap, tracing, tracing-subscriber, thiserror, anyhow) and dev-deps (reqwest with json feature, tokio test runtime) in Cargo.toml
+- [X] T002 [P] Create src/lib.rs with module declarations (`mod domain; mod api; mod ui;`) and stub `pub fn build_router() -> axum::Router` returning empty Router in src/lib.rs
+- [X] T003 [P] Create tests/integration/api_test.rs with test module skeleton and shared `async fn spawn_server() -> String` helper that binds to 127.0.0.1:0 and returns base URL in tests/integration/api_test.rs
 
 ---
 
@@ -31,9 +31,9 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Write unit tests for `calculate_bmi`: all 4 WHO boundary values, zero weight, negative height, NaN/Infinity result -- tests MUST fail before T006 in src/domain.rs
-- [ ] T005 Define `BmiCategory` enum (Underweight/Normal/Overweight/Obese) with `Display`, `BmiResult` struct (bmi: f64, category: BmiCategory), and `DomainError` enum (InvalidWeight, InvalidHeight, NonFiniteResult) via thiserror in src/domain.rs
-- [ ] T006 Implement `calculate_bmi(weight_kg: f64, height_m: f64) -> Result<BmiResult, DomainError>` and private `classify(bmi: f64) -> BmiCategory` in src/domain.rs -- make T004 tests pass
+- [X] T004 Write unit tests for `calculate_bmi`: all 4 WHO boundary values, zero weight, negative height, NaN/Infinity result -- tests MUST fail before T006 in src/domain.rs
+- [X] T005 Define `BmiCategory` enum (Underweight/Normal/Overweight/Obese) with `Display`, `BmiResult` struct (bmi: f64, category: BmiCategory), and `DomainError` enum (InvalidWeight, InvalidHeight, NonFiniteResult) via thiserror in src/domain.rs
+- [X] T006 Implement `calculate_bmi(weight_kg: f64, height_m: f64) -> Result<BmiResult, DomainError>` and private `classify(bmi: f64) -> BmiCategory` in src/domain.rs -- make T004 tests pass
 
 **Checkpoint**: `cargo test --lib` passes all domain unit tests
 
@@ -49,15 +49,15 @@
 
 > Write FIRST -- MUST FAIL before implementation
 
-- [ ] T007 [P] [US1] Write integration tests for POST /api/bmi success: 70kg/1.75m -> 22.9 Normal, 50kg/1.80m -> 15.4 Underweight, 90kg/1.70m -> 31.1 Obese in tests/integration/api_test.rs
+- [X] T007 [P] [US1] Write integration tests for POST /api/bmi success: 70kg/1.75m -> 22.9 Normal, 50kg/1.80m -> 15.4 Underweight, 90kg/1.70m -> 31.1 Obese in tests/integration/api_test.rs
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Define `BmiRequest` (Deserialize: weight_kg f64, height_m f64), `BmiResponse` (Serialize: bmi f64, category String), `ErrorResponse` (Serialize: error String) in src/api.rs
-- [ ] T009 [US1] Implement `async fn bmi_handler(Json(req): Json<BmiRequest>) -> Result<Json<BmiResponse>, (StatusCode, Json<ErrorResponse>)>` calling `domain::calculate_bmi` and mapping result in src/api.rs
-- [ ] T010 [US1] Register `POST /api/bmi` route with `bmi_handler` in `build_router()` in src/lib.rs
-- [ ] T011 [P] [US1] Implement `#[derive(Parser)] struct Cli` with `--port u16` (default 3000) and `--log-level` args; add PORT env var override (env var wins over --port) in src/main.rs
-- [ ] T012 [US1] Implement `#[tokio::main] async fn main()` with tracing-subscriber init (EnvFilter from log-level arg) and `axum::serve(TcpListener::bind(addr).await?, build_router()).await?` in src/main.rs
+- [X] T008 [P] [US1] Define `BmiRequest` (Deserialize: weight_kg f64, height_m f64), `BmiResponse` (Serialize: bmi f64, category String), `ErrorResponse` (Serialize: error String) in src/api.rs
+- [X] T009 [US1] Implement `async fn bmi_handler(Json(req): Json<BmiRequest>) -> Result<Json<BmiResponse>, (StatusCode, Json<ErrorResponse>)>` calling `domain::calculate_bmi` and mapping result in src/api.rs
+- [X] T010 [US1] Register `POST /api/bmi` route with `bmi_handler` in `build_router()` in src/lib.rs
+- [X] T011 [P] [US1] Implement `#[derive(Parser)] struct Cli` with `--port u16` (default 3000) and `--log-level` args; add PORT env var override (env var wins over --port) in src/main.rs
+- [X] T012 [US1] Implement `#[tokio::main] async fn main()` with tracing-subscriber init (EnvFilter from log-level arg) and `axum::serve(TcpListener::bind(addr).await?, build_router()).await?` in src/main.rs
 
 **Checkpoint**: `cargo test` passes T007 integration tests; `cargo run` serves POST /api/bmi returning correct BMI and category
 
@@ -73,12 +73,12 @@
 
 > Write FIRST -- MUST FAIL before implementation
 
-- [ ] T013 [P] [US2] Write integration tests for 422 error paths: zero weight, negative height, missing field, empty body -- all expect 422 with `{"error": "..."}` in tests/integration/api_test.rs
+- [X] T013 [P] [US2] Write integration tests for 422 error paths: zero weight, negative height, missing field, empty body -- all expect 422 with `{"error": "..."}` in tests/integration/api_test.rs
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Implement custom Axum rejection handler `async fn handle_json_rejection(err: JsonRejection) -> (StatusCode, Json<ErrorResponse>)` remapping 400 to 422 for deserialization errors; register it via `Router::layer(DefaultBodyLimit::disable()).route_layer(...)` or `axum::extract::rejection` handling in src/api.rs
-- [ ] T015 [US2] Verify `DomainError::InvalidWeight`, `DomainError::InvalidHeight`, and `DomainError::NonFiniteResult` all map to `StatusCode::UNPROCESSABLE_ENTITY` with correct error strings in `bmi_handler` in src/api.rs
+- [X] T014 [US2] Implement custom Axum rejection handler `async fn handle_json_rejection(err: JsonRejection) -> (StatusCode, Json<ErrorResponse>)` remapping 400 to 422 for deserialization errors; register it via `Router::layer(DefaultBodyLimit::disable()).route_layer(...)` or `axum::extract::rejection` handling in src/api.rs
+- [X] T015 [US2] Verify `DomainError::InvalidWeight`, `DomainError::InvalidHeight`, and `DomainError::NonFiniteResult` all map to `StatusCode::UNPROCESSABLE_ENTITY` with correct error strings in `bmi_handler` in src/api.rs
 
 **Checkpoint**: `cargo test` passes T013 integration tests; all error cases return 422 with correct JSON
 
@@ -94,13 +94,13 @@
 
 > Write FIRST -- MUST FAIL before implementation
 
-- [ ] T016 [P] [US3] Write integration test for GET / returning 200 with `Content-Type: text/html` and body containing `<form` in tests/integration/api_test.rs
+- [X] T016 [P] [US3] Write integration test for GET / returning 200 with `Content-Type: text/html` and body containing `<form` in tests/integration/api_test.rs
 
 ### Implementation for User Story 3
 
-- [ ] T017 [P] [US3] Implement embedded HTML page as `pub const INDEX_HTML: &str` -- Bootstrap 5 CDN, form with weight_kg and height_m inputs, fetch POST to /api/bmi on submit, display result/error div inline in src/ui.rs
-- [ ] T018 [US3] Implement `async fn root_handler() -> axum::response::Html<&'static str>` returning `Html(INDEX_HTML)` in src/ui.rs
-- [ ] T019 [US3] Register `GET /` route with `root_handler` in `build_router()` in src/lib.rs
+- [X] T017 [P] [US3] Implement embedded HTML page as `pub const INDEX_HTML: &str` -- Bootstrap 5 CDN, form with weight_kg and height_m inputs, fetch POST to /api/bmi on submit, display result/error div inline in src/ui.rs
+- [X] T018 [US3] Implement `async fn root_handler() -> axum::response::Html<&'static str>` returning `Html(INDEX_HTML)` in src/ui.rs
+- [X] T019 [US3] Register `GET /` route with `root_handler` in `build_router()` in src/lib.rs
 
 **Checkpoint**: `cargo test` passes T016; browser shows form and displays BMI result inline on submit
 
@@ -116,12 +116,12 @@
 
 > Write FIRST -- MUST FAIL before implementation
 
-- [ ] T020 [P] [US4] Write integration test for GET /health returning 200 status code in tests/integration/api_test.rs
+- [X] T020 [P] [US4] Write integration test for GET /health returning 200 status code in tests/integration/api_test.rs
 
 ### Implementation for User Story 4
 
-- [ ] T021 [P] [US4] Implement `async fn health_handler() -> StatusCode` returning `StatusCode::OK` in src/api.rs
-- [ ] T022 [US4] Register `GET /health` route with `health_handler` in `build_router()` in src/lib.rs
+- [X] T021 [P] [US4] Implement `async fn health_handler() -> StatusCode` returning `StatusCode::OK` in src/api.rs
+- [X] T022 [US4] Register `GET /health` route with `health_handler` in `build_router()` in src/lib.rs
 
 **Checkpoint**: `cargo test` passes T020; `curl /health` returns 200
 
@@ -131,11 +131,11 @@
 
 **Purpose**: Final validation and end-to-end verification across all stories
 
-- [ ] T023 Extract `pub fn resolve_port(cli_port: u16) -> u16` from main() that reads PORT env var and falls back to cli_port; add #[cfg(test)] unit test asserting PORT overrides cli_port in src/main.rs
-- [ ] T024 [P] Run `cargo test` and confirm all unit + integration tests pass with zero warnings
-- [ ] T025 [P] Execute all manual verification steps from quickstart.md against running server (BMI calculation, invalid input, health check, web UI); time POST /api/bmi with `curl -w "%{time_total}\n"` and confirm < 1s (SC-001)
-- [ ] T026 [P] Run `cargo fmt --check` and `cargo clippy -- -D warnings` with zero errors/warnings in project root
-- [ ] T027 [P] Create `Procfile` in project root with `web: ./target/release/<package-name>` (replace package-name with Cargo.toml `name` field)
+- [X] T023 Extract `pub fn resolve_port(cli_port: u16) -> u16` from main() that reads PORT env var and falls back to cli_port; add #[cfg(test)] unit test asserting PORT overrides cli_port in src/main.rs
+- [X] T024 [P] Run `cargo test` and confirm all unit + integration tests pass with zero warnings
+- [X] T025 [P] Execute all manual verification steps from quickstart.md against running server (BMI calculation, invalid input, health check, web UI); time POST /api/bmi with `curl -w "%{time_total}\n"` and confirm < 1s (SC-001)
+- [X] T026 [P] Run `cargo fmt --check` and `cargo clippy -- -D warnings` with zero errors/warnings in project root
+- [X] T027 [P] Create `Procfile` in project root with `web: ./target/release/<package-name>` (replace package-name with Cargo.toml `name` field)
 
 ---
 
