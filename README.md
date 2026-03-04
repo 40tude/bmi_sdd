@@ -186,21 +186,28 @@ Select and copy the token.
 git push heroku main
 ```
 * When the dialog box popup, enter **ANY** name and paste the token. Files are sent, the build process starts and the server is launched.
-* Note the URL (for example: https://rust-bmi-sdd-e758aa539869.herokuapp.com/)
+* Note the URL (for example: https://rust-bmi-sdd-XXXX.herokuapp.com/)
 
-5. Open your app:
+5. Open the app:
 ```bash
 heroku open
 ```
+Alternatively point your browser to the previous URL (for example: https://rust-bmi-sdd-XXXX.herokuapp.com/)
 
 **Note:**
 Use
 ```bash
 heroku run bash
 ```
-* Check the files deployed on Heroku.
-* Check the size of the binary with `ls -al ./target/release/`
+* To check the files deployed on Heroku.
+* To check the size of the binary with `ls -al ./target/release/`
 
+
+**Note:**
+The process should be:
+- Modify the app, test locally etc.
+- Commit & push on GitHub
+- Push on Heroku
 
 
 ## Non-goals
