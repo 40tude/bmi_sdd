@@ -5,6 +5,7 @@
 .claude/
 .git/
 .specify/
+assets/
 docs/
 specs/
 tests/

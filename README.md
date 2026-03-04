@@ -13,6 +13,10 @@
 * SDD = Spec Driven Development
 * The aim is to apply the Spec Kit workflow to create a simple BMI Calculator web application in Rust.
 
+<div align="center">
+<img src="./assets/img00.webp" alt="" width="450" loading="lazy"/><br/>
+<!-- <span>Optional comment</span> -->
+</div>
 
 ## Core Functionality
 
@@ -150,8 +154,8 @@ cargo clippy -- -D warnings
 - Run and test locally first
 - Heroku CLI installed
 - Heroku account
-- Read `.slugignore`
-- Check the line `strip = "symbols"` in `Cargo.toml`
+- Read `.slugignore` (avoid useless files on Heroku)
+- Check the line `strip = "symbols"` in `Cargo.toml` (reduce size by removing symbol table entries from the final executable)
 
 
 ### Steps
@@ -185,7 +189,8 @@ Select and copy the token.
 ```bash
 git push heroku main
 ```
-* When the dialog box popup, enter **ANY** name and paste the token. Files are sent, the build process starts and the server is launched.
+* When the dialog box popup, enter **ANY** name and paste the token.
+* Files are sent, the build process starts and the server is launched.
 * Note the URL (for example: https://rust-bmi-sdd-XXXX.herokuapp.com/)
 
 5. Open the app:
@@ -200,12 +205,12 @@ Use
 heroku run bash
 ```
 * To check the files deployed on Heroku.
-* To check the size of the binary with `ls -al ./target/release/`
+* To check the size of the binary use `ls -al ./target/release/`
 
 
 **Note:**
 The process should be:
-- Modify the app, test locally etc.
+- Add features with Spec Kit, modify the app with Claude, test locally etc.
 - Commit & push on GitHub
 - Push on Heroku
 
