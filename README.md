@@ -60,6 +60,79 @@
 * All tests runnable via `cargo test`
 
 
+## Local Development
+
+### Build
+
+```bash
+cargo build
+```
+
+### Run
+
+```bash
+# Default port 3000
+cargo run
+
+# Custom port via CLI flag
+cargo run -- --port 8080
+
+# Custom port via env var (takes precedence over --port)
+PORT=8080 cargo run
+
+# Custom log level
+cargo run -- --log-level debug
+```
+
+The server starts at `http://localhost:3000` (or the configured port).
+
+### Test
+
+```bash
+# Run all tests (unit + integration)
+cargo test
+
+# Unit tests only (domain logic + port resolution)
+cargo test --lib
+cargo test --bin bmi_sdd
+
+# Integration tests only
+cargo test --test api_test
+```
+
+### Manual Verification
+
+With the server running (`cargo run`):
+
+```bash
+# Valid BMI calculation
+curl -X POST http://localhost:3000/api/bmi \
+  -H "Content-Type: application/json" \
+  -d '{"weight_kg": 70.0, "height_m": 1.75}'
+# -> 200 {"bmi":22.9,"category":"Normal"}
+
+# Invalid input
+curl -X POST http://localhost:3000/api/bmi \
+  -H "Content-Type: application/json" \
+  -d '{"weight_kg": 0.0, "height_m": 1.75}'
+# -> 422 {"error":"weight_kg must be positive"}
+
+# Health check
+curl http://localhost:3000/health
+# -> 200 OK
+
+# Web UI — open in browser
+start http://localhost:3000
+```
+
+### Code Quality
+
+```bash
+cargo fmt
+cargo clippy -- -D warnings
+```
+
+
 ## Deployment
 
 * Run and test locally first — port configurable via `--port` CLI flag or `PORT` env var (Heroku convention)
