@@ -1,5 +1,10 @@
 target/
 temp/
 docs/
-.env
+.env*
 .claude/settings.local.json
+*.rs.bk
+*.rlib
+*.prof*
+.idea/
+*.log
