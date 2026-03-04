@@ -131,9 +131,11 @@
 
 **Purpose**: Final validation and end-to-end verification across all stories
 
-- [ ] T023 Verify PORT env var takes precedence over --port flag by testing `PORT=8080 cargo run -- --port 3000` binds on 8080 in src/main.rs
+- [ ] T023 Extract `pub fn resolve_port(cli_port: u16) -> u16` from main() that reads PORT env var and falls back to cli_port; add #[cfg(test)] unit test asserting PORT overrides cli_port in src/main.rs
 - [ ] T024 [P] Run `cargo test` and confirm all unit + integration tests pass with zero warnings
-- [ ] T025 [P] Execute all manual verification steps from quickstart.md against running server (BMI calculation, invalid input, health check, web UI)
+- [ ] T025 [P] Execute all manual verification steps from quickstart.md against running server (BMI calculation, invalid input, health check, web UI); time POST /api/bmi with `curl -w "%{time_total}\n"` and confirm < 1s (SC-001)
+- [ ] T026 [P] Run `cargo fmt --check` and `cargo clippy -- -D warnings` with zero errors/warnings in project root
+- [ ] T027 [P] Create `Procfile` in project root with `web: ./target/release/<package-name>` (replace package-name with Cargo.toml `name` field)
 
 ---
 
@@ -171,7 +173,7 @@
 - Phase 4: T013 (tests) can run in parallel with T014 (rejection handler)
 - Phase 5: T016 (test) and T017 (HTML) can run in parallel
 - Phase 6: T020 (test) and T021 (health handler) can run in parallel
-- Phase 7: T024 and T025 can run in parallel
+- Phase 7: T024, T025, T026, and T027 can all run in parallel
 
 ---
 
