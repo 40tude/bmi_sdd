@@ -144,18 +144,21 @@ cargo clippy -- -D warnings
 
 ## Deployment to Heroku
 
-* Run and test locally first — port configurable via `--port` CLI flag or `PORT` env var (Heroku convention)
 
 ### Prerequisites
 
+- Run and test locally first
 - Heroku CLI installed
 - Heroku account
+- Read `.slugignore`
+- Check the line `strip = "symbols"` in `Cargo.toml`
+
 
 ### Steps
 
 1. Create a new Heroku app:
 ```bash
-heroku create your-app-name
+heroku create rust-bmi-sdd
 ```
 
 2. Set the buildpack:
@@ -163,15 +166,40 @@ heroku create your-app-name
 heroku buildpacks:set emk/rust
 ```
 
-3. Deploy:
+**Note:**
+Combine 1 & 2 with
+
+```bash
+heroku create rust-bmi-sdd --buildpack emk/rust
+```
+
+
+3. Auth:
+```powershell
+heroku auth:token
+```
+Select and copy the token.
+
+
+4. Deploy on Heroku:
 ```bash
 git push heroku main
 ```
+* When the dialog box popup, enter **ANY** name and paste the token. Files are sent, the build process starts and the server is launched.
+* Note the URL (for example: https://rust-bmi-sdd-e758aa539869.herokuapp.com/)
 
-4. Open your app:
+5. Open your app:
 ```bash
 heroku open
 ```
+
+**Note:**
+Use
+```bash
+heroku run bash
+```
+* Check the files deployed on Heroku.
+* Check the size of the binary with `ls -al ./target/release/`
 
 
 

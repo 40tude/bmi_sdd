@@ -22,3 +22,5 @@ benches/
 .gitlab-ci.yml
 
 # Misc
+*.md
+LICENSE
