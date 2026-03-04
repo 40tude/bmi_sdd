@@ -70,7 +70,7 @@ cargo build
 
 ### Run
 
-```bash
+```powershell
 # Default port 3000
 cargo run
 
@@ -78,10 +78,18 @@ cargo run
 cargo run -- --port 8080
 
 # Custom port via env var (takes precedence over --port)
-PORT=8080 cargo run
+$env:PORT='8086'; cargo run; Remove-Item env:PORT
+# CTRL+C to stop
+Remove-Item env:PORT
+ls env:
+
+# PORT only exists for the spawned process
+Start-Process cargo -ArgumentList 'run' -NoNewWindow -Wait -Environment @{ PORT = '8086' }
+
 
 # Custom log level
 cargo run -- --log-level debug
+cargo run -- --log-level "bmi_sdd=debug,hyper=debug,tower=debug"
 ```
 
 The server starts at `http://localhost:3000` (or the configured port).

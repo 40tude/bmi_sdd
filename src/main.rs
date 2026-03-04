@@ -41,6 +41,18 @@ pub fn resolve_port(cli_port: u16) -> u16 {
     resolve_port_inner(std::env::var("PORT").ok(), cli_port)
 }
 
+/// Resolves when CTRL+C is received and logs a structured shutdown-start event.
+async fn shutdown_signal() {
+    tokio::signal::ctrl_c()
+        .await
+        .expect("failed to install CTRL+C handler");
+    tracing::event!(
+        name: "server.shutdown.start",
+        tracing::Level::INFO,
+        "received CTRL+C -- shutting down",
+    );
+}
+
 // --- T012: Main entry point ---
 
 #[tokio::main]
@@ -63,7 +75,15 @@ async fn main() -> anyhow::Result<()> {
         "server listening on {{server.address}}",
     );
 
-    axum::serve(listener, bmi_sdd::build_router()).await?;
+    axum::serve(listener, bmi_sdd::build_router())
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+
+    tracing::event!(
+        name: "server.shutdown.complete",
+        tracing::Level::INFO,
+        "server stopped",
+    );
     Ok(())
 }
 

@@ -73,6 +73,7 @@ where
 pub(crate) async fn bmi_handler(
     ValidJson(req): ValidJson<BmiRequest>,
 ) -> Result<Json<BmiResponse>, (StatusCode, Json<ErrorResponse>)> {
+    tracing::debug!(weight = %req.weight_kg, height = %req.height_m, "bmi request received");
     // T015: InvalidWeight, InvalidHeight, NonFiniteResult all map to 422
     domain::calculate_bmi(req.weight_kg, req.height_m)
         .map(|result| {
