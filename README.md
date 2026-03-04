@@ -16,7 +16,7 @@
     * In rust
     * Bootstrap should be used for the UI
     * Preferred crates (if applicable)
-        * thisrerror & anyhow
+        * thiserror & anyhow
         * tracing & tracing-subscriber
         * clap
         * serde
