@@ -178,3 +178,193 @@ async fn test_health_returns_200() {
         .expect("request failed");
     assert_eq!(resp.status(), 200);
 }
+
+// --- T010: US1 - history appears in response after single calculation ---
+
+#[tokio::test]
+async fn history_appears_after_calculation() {
+    let base = spawn_server().await;
+    let client = reqwest::Client::new();
+    let resp = client
+        .post(format!("{base}/api/bmi"))
+        .json(&serde_json::json!({"weight_kg": 70.0, "height_m": 1.75}))
+        .send()
+        .await
+        .expect("request failed");
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.expect("body parse failed");
+    let history = body["history"]
+        .as_array()
+        .expect("history must be an array");
+    assert_eq!(
+        history.len(),
+        1,
+        "one calculation must produce one history entry"
+    );
+    assert_eq!(history[0]["weight_kg"].as_f64().unwrap(), 70.0);
+    assert_eq!(history[0]["height_m"].as_f64().unwrap(), 1.75);
+    assert!(history[0]["bmi"].is_number(), "bmi must be a number");
+    assert!(
+        history[0]["category"]
+            .as_str()
+            .is_some_and(|s| !s.is_empty()),
+        "category must be a non-empty string"
+    );
+    assert!(
+        history[0]["timestamp"]
+            .as_str()
+            .is_some_and(|s| !s.is_empty()),
+        "timestamp must be a non-empty string"
+    );
+}
+
+// --- T011: US2 - FIFO eviction at capacity ---
+
+#[tokio::test]
+async fn history_evicts_oldest_at_capacity() {
+    let base = spawn_server().await;
+    let client = reqwest::Client::new();
+    // Post 6 requests; weights 60.0..=65.0 (1 kg apart)
+    let mut last_body = serde_json::Value::Null;
+    for i in 0u8..6 {
+        let weight = 60.0 + f64::from(i);
+        let resp = client
+            .post(format!("{base}/api/bmi"))
+            .json(&serde_json::json!({"weight_kg": weight, "height_m": 1.75}))
+            .send()
+            .await
+            .expect("request failed");
+        assert_eq!(resp.status(), 200);
+        last_body = resp.json().await.expect("body parse failed");
+    }
+    let history = last_body["history"]
+        .as_array()
+        .expect("history must be an array");
+    assert_eq!(history.len(), 5, "history must never exceed 5 entries");
+    // The first weight (60.0) must have been evicted
+    let weights: Vec<f64> = history
+        .iter()
+        .map(|e| e["weight_kg"].as_f64().unwrap())
+        .collect();
+    assert!(
+        !weights.contains(&60.0),
+        "oldest entry (60.0 kg) must have been evicted"
+    );
+    assert_eq!(
+        history[0]["weight_kg"].as_f64().unwrap(),
+        65.0,
+        "newest entry must be at index 0"
+    );
+}
+
+// --- T012: US2 - ordering preserved after eviction ---
+
+#[tokio::test]
+async fn history_ordering_preserved_after_eviction() {
+    let base = spawn_server().await;
+    let client = reqwest::Client::new();
+    // Fill history to capacity (5 entries)
+    for i in 0u8..5 {
+        let weight = 70.0 + f64::from(i);
+        client
+            .post(format!("{base}/api/bmi"))
+            .json(&serde_json::json!({"weight_kg": weight, "height_m": 1.75}))
+            .send()
+            .await
+            .expect("request failed");
+    }
+    // 6th request triggers eviction; the 5th entry (74.0 kg) becomes index 1
+    let resp = client
+        .post(format!("{base}/api/bmi"))
+        .json(&serde_json::json!({"weight_kg": 80.0, "height_m": 1.75}))
+        .send()
+        .await
+        .expect("request failed");
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.expect("body parse failed");
+    let history = body["history"].as_array().expect("history must be array");
+    assert_eq!(history.len(), 5);
+    assert_eq!(
+        history[0]["weight_kg"].as_f64().unwrap(),
+        80.0,
+        "newest entry (80.0 kg) must be at index 0 after eviction"
+    );
+    assert_eq!(
+        history[1]["weight_kg"].as_f64().unwrap(),
+        74.0,
+        "previously-newest entry (74.0 kg) must be at index 1"
+    );
+}
+
+// --- T013: US3 - history shared across clients ---
+
+#[tokio::test]
+async fn history_shared_across_clients() {
+    let base = spawn_server().await;
+    let client_a = reqwest::Client::new();
+    let client_b = reqwest::Client::new();
+    // First client sends a calculation
+    client_a
+        .post(format!("{base}/api/bmi"))
+        .json(&serde_json::json!({"weight_kg": 70.0, "height_m": 1.75}))
+        .send()
+        .await
+        .expect("client_a request failed");
+    // Second client sends a different calculation
+    let resp = client_b
+        .post(format!("{base}/api/bmi"))
+        .json(&serde_json::json!({"weight_kg": 80.0, "height_m": 1.80}))
+        .send()
+        .await
+        .expect("client_b request failed");
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.expect("body parse failed");
+    let history = body["history"].as_array().expect("history must be array");
+    assert!(
+        history.len() >= 2,
+        "shared history must contain both calculations"
+    );
+    let weights: Vec<f64> = history
+        .iter()
+        .map(|e| e["weight_kg"].as_f64().unwrap())
+        .collect();
+    assert!(
+        weights.contains(&70.0),
+        "client_a entry (70.0 kg) must be in shared history"
+    );
+    assert!(
+        weights.contains(&80.0),
+        "client_b entry (80.0 kg) must be in shared history"
+    );
+}
+
+// --- T014: Polish - failed validation does not pollute history ---
+
+#[tokio::test]
+async fn failed_validation_does_not_add_history() {
+    let base = spawn_server().await;
+    let client = reqwest::Client::new();
+    // Invalid request -- must not add to history
+    let invalid = client
+        .post(format!("{base}/api/bmi"))
+        .json(&serde_json::json!({"weight_kg": -1.0, "height_m": 1.75}))
+        .send()
+        .await
+        .expect("request failed");
+    assert_eq!(invalid.status(), 422);
+    // Valid request -- history must have exactly one entry
+    let resp = client
+        .post(format!("{base}/api/bmi"))
+        .json(&serde_json::json!({"weight_kg": 70.0, "height_m": 1.75}))
+        .send()
+        .await
+        .expect("request failed");
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.expect("body parse failed");
+    let history = body["history"].as_array().expect("history must be array");
+    assert_eq!(
+        history.len(),
+        1,
+        "failed request must not have added an entry to history"
+    );
+}
