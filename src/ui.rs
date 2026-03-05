@@ -55,17 +55,29 @@ document.getElementById('bmi-form').addEventListener('submit', async (e) => {
       resultDiv.innerHTML =
         `<div class="alert alert-success">BMI: ${data.bmi} &mdash; ${data.category}</div>`;
       if (data.history && data.history.length > 0) {
+        const catBadge = (cat) => {
+          const cls = cat === 'Normal' ? 'success' :
+                      cat === 'Obese'  ? 'danger'  : 'warning';
+          return `<span class="badge text-bg-${cls}">${cat}</span>`;
+        };
         const rows = data.history.map((entry, i) =>
-          `<tr><td>${i + 1}</td><td>${entry.weight_kg}</td><td>${entry.height_m}</td>` +
-          `<td>${entry.bmi}</td><td>${entry.category}</td>` +
+          `<tr><td>${i + 1}</td>` +
+          `<td class="text-end">${entry.weight_kg}</td>` +
+          `<td class="text-end">${entry.height_m}</td>` +
+          `<td class="text-end">${entry.bmi}</td>` +
+          `<td>${catBadge(entry.category)}</td>` +
           `<td>${new Date(entry.timestamp).toLocaleString()}</td></tr>`
         ).join('');
         historyDiv.innerHTML =
-          `<h5>Calculation History</h5>` +
-          `<table class="table table-sm table-bordered">` +
-          `<thead><tr><th>#</th><th>Weight kg</th><th>Height m</th>` +
-          `<th>BMI</th><th>Category</th><th>Time</th></tr></thead>` +
-          `<tbody>${rows}</tbody></table>`;
+          `<div class="card">` +
+          `<div class="card-header fw-bold">Calculation History</div>` +
+          `<div class="card-body p-0">` +
+          `<table class="table table-striped table-hover table-bordered table-sm mb-0">` +
+          `<thead class="table-dark"><tr><th>#</th>` +
+          `<th class="text-end">Weight kg</th><th class="text-end">Height m</th>` +
+          `<th class="text-end">BMI</th><th>Category</th><th>Time</th></tr></thead>` +
+          `<tbody>${rows}</tbody></table>` +
+          `</div></div>`;
       }
     } else {
       resultDiv.innerHTML =
