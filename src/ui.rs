@@ -35,13 +35,15 @@ pub const INDEX_HTML: &str = r#"<!DOCTYPE html>
     <button type="submit" class="btn btn-primary w-100">Calculate</button>
   </form>
   <div id="result" class="mt-3"></div>
+  <div id="history" class="mt-4"></div>
 </div>
 <script>
 document.getElementById('bmi-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const weight_kg = parseFloat(document.getElementById('weight').value);
   const height_m  = parseFloat(document.getElementById('height').value);
-  const resultDiv = document.getElementById('result');
+  const resultDiv  = document.getElementById('result');
+  const historyDiv = document.getElementById('history');
   try {
     const response = await fetch('/api/bmi', {
       method: 'POST',
@@ -52,6 +54,19 @@ document.getElementById('bmi-form').addEventListener('submit', async (e) => {
     if (response.ok) {
       resultDiv.innerHTML =
         `<div class="alert alert-success">BMI: ${data.bmi} &mdash; ${data.category}</div>`;
+      if (data.history && data.history.length > 0) {
+        const rows = data.history.map((entry, i) =>
+          `<tr><td>${i + 1}</td><td>${entry.weight_kg}</td><td>${entry.height_m}</td>` +
+          `<td>${entry.bmi}</td><td>${entry.category}</td>` +
+          `<td>${new Date(entry.timestamp).toLocaleString()}</td></tr>`
+        ).join('');
+        historyDiv.innerHTML =
+          `<h5>Calculation History</h5>` +
+          `<table class="table table-sm table-bordered">` +
+          `<thead><tr><th>#</th><th>Weight kg</th><th>Height m</th>` +
+          `<th>BMI</th><th>Category</th><th>Time</th></tr></thead>` +
+          `<tbody>${rows}</tbody></table>`;
+      }
     } else {
       resultDiv.innerHTML =
         `<div class="alert alert-danger">Error: ${data.error}</div>`;

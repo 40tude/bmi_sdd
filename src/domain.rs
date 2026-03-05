@@ -2,7 +2,61 @@
 
 //! Pure BMI calculation and WHO classification with no I/O or framework dependencies.
 
+use std::collections::VecDeque;
+
 use thiserror::Error;
+
+// --- T003: Generic bounded FIFO collection ---
+
+/// Generic bounded FIFO collection; newest entries at front, oldest evicted at capacity.
+///
+/// `BoundedHistory<T>` encapsulates the max-size invariant so it can be unit-tested
+/// independently of the HTTP layer. It is free of I/O and serialization dependencies.
+#[derive(Debug)]
+pub struct BoundedHistory<T> {
+    deque: VecDeque<T>,
+    /// Hard cap on the number of retained entries.
+    ///
+    /// When `push` would exceed this limit, the oldest entry (back of the deque)
+    /// is evicted first. Set to `5` for BMI history at the call site.
+    max_size: usize,
+}
+
+impl<T> BoundedHistory<T> {
+    /// Creates an empty `BoundedHistory` preallocated for `max_size` entries.
+    #[must_use]
+    pub fn new(max_size: usize) -> Self {
+        Self {
+            deque: VecDeque::with_capacity(max_size),
+            max_size,
+        }
+    }
+
+    /// Inserts `item` at the front (newest position), evicting the oldest if at capacity.
+    pub fn push(&mut self, item: T) {
+        self.deque.push_front(item);
+        if self.deque.len() > self.max_size {
+            self.deque.pop_back();
+        }
+    }
+
+    /// Returns an iterator over entries from newest to oldest.
+    pub fn entries(&self) -> impl Iterator<Item = &T> + '_ {
+        self.deque.iter()
+    }
+
+    /// Returns the current number of entries.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.deque.len()
+    }
+
+    /// Returns `true` when the collection contains no entries.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.deque.is_empty()
+    }
+}
 
 /// WHO body mass index classification.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -99,6 +153,72 @@ fn classify(bmi: f64) -> BmiCategory {
         BmiCategory::Overweight
     } else {
         BmiCategory::Obese
+    }
+}
+
+// --- T002: Unit tests for BoundedHistory<T> ---
+
+#[cfg(test)]
+mod bounded_history_tests {
+    use super::BoundedHistory;
+
+    #[test]
+    fn new_creates_empty_collection() {
+        let h: BoundedHistory<i32> = BoundedHistory::new(3);
+        assert!(h.is_empty());
+        assert_eq!(h.len(), 0);
+    }
+
+    #[test]
+    fn push_adds_entry_at_front() {
+        let mut h = BoundedHistory::new(3);
+        h.push(1);
+        h.push(2);
+        let entries: Vec<_> = h.entries().copied().collect();
+        assert_eq!(entries[0], 2, "newest entry must be at front");
+        assert_eq!(entries[1], 1);
+    }
+
+    #[test]
+    fn entries_returns_newest_first() {
+        let mut h = BoundedHistory::new(5);
+        h.push(10);
+        h.push(20);
+        h.push(30);
+        let entries: Vec<i32> = h.entries().copied().collect();
+        assert_eq!(entries, vec![30, 20, 10]);
+    }
+
+    #[test]
+    fn len_tracks_count() {
+        let mut h = BoundedHistory::new(5);
+        assert_eq!(h.len(), 0);
+        h.push(1);
+        assert_eq!(h.len(), 1);
+        h.push(2);
+        assert_eq!(h.len(), 2);
+    }
+
+    #[test]
+    fn is_empty_reflects_state() {
+        let mut h: BoundedHistory<u8> = BoundedHistory::new(2);
+        assert!(h.is_empty());
+        h.push(1);
+        assert!(!h.is_empty());
+    }
+
+    #[test]
+    fn fifo_eviction_at_capacity() {
+        let mut h = BoundedHistory::new(3);
+        h.push(1);
+        h.push(2);
+        h.push(3);
+        // At capacity -- pushing a 4th must evict the oldest (1)
+        h.push(4);
+        assert_eq!(h.len(), 3, "len must not exceed max_size");
+        let entries: Vec<i32> = h.entries().copied().collect();
+        assert!(!entries.contains(&1), "oldest entry must have been evicted");
+        assert_eq!(entries[0], 4, "newest must be at front after eviction");
     }
 }
 
