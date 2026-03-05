@@ -1,7 +1,7 @@
 # bmi_sdd
 
 > **Warning:** The `.cargo/` folder contains Windows-specific configuration (custom `target-dir` for OneDrive, CPU flags). Delete or rename before building:
-> ```bash
+> ```powershell
 > mv .cargo .cargo.bak
 > ```
 > More information on this [page](https://www.40tude.fr/docs/06_programmation/rust/005_my_rust_setup_win11/my_rust_setup_win11.html#onedrive).
@@ -23,10 +23,10 @@
 * Calculate Body Mass Index (BMI) using SI units (kg for weight, meters for height)
 * Classify BMI into standard WHO categories:
     * Underweight: < 18.5
-    * Normal: 18.5 – 24.9
-    * Overweight: 25.0 – 29.9
+    * Normal: 18.5 - 24.9
+    * Overweight: 25.0 - 29.9
     * Obese: ≥ 30.0
-* Stateless application — no database, no persistence
+* Stateless application -no database, no persistence
 
 
 ## API
@@ -43,7 +43,7 @@
 * **Web framework:** Axum + Tokio (async runtime)
 * **Serialization:** Serde (JSON request/response)
 * **Error handling:** thiserror (domain/library errors) + anyhow (application-level errors)
-* **Logging:** tracing + tracing-subscriber — all errors logged server-side
+* **Logging:** tracing + tracing-subscriber -all errors logged server-side
 * **CLI config:** Clap (port, log level)
 * **HTTP client:** Reqwest (for integration tests)
 * **UI:** Bootstrap (CDN), served as embedded HTML via Axum
@@ -68,7 +68,7 @@
 
 ### Build
 
-```bash
+```powershell
 cargo build
 ```
 
@@ -82,7 +82,7 @@ cargo run
 cargo run -- --port 8080
 
 # Custom port via env var (takes precedence over --port)
-$env:PORT='8086'; cargo run; Remove-Item env:PORT
+$env:PORT='8086'; cargo run
 # CTRL+C to stop
 Remove-Item env:PORT
 ls env:
@@ -100,7 +100,7 @@ The server starts at `http://localhost:3000` (or the configured port).
 
 ### Test
 
-```bash
+```powershell
 # Run all tests (unit + integration)
 cargo test
 
@@ -116,30 +116,31 @@ cargo test --test api_test
 
 With the server running (`cargo run`):
 
-```bash
+```powershell
 # Valid BMI calculation
-curl -X POST http://localhost:3000/api/bmi \
-  -H "Content-Type: application/json" \
+curl -X POST http://localhost:3000/api/bmi `
+  -H "Content-Type: application/json" `
   -d '{"weight_kg": 70.0, "height_m": 1.75}'
 # -> 200 {"bmi":22.9,"category":"Normal"}
 
 # Invalid input
-curl -X POST http://localhost:3000/api/bmi \
-  -H "Content-Type: application/json" \
+curl -X POST http://localhost:3000/api/bmi `
+  -H "Content-Type: application/json" `
   -d '{"weight_kg": 0.0, "height_m": 1.75}'
 # -> 422 {"error":"weight_kg must be positive"}
 
 # Health check
-curl http://localhost:3000/health
-# -> 200 OK
+$response = Invoke-WebRequest http://localhost:3000/health
+$response.StatusCode
+# -> 200
 
-# Web UI — open in browser
+# Web UI -open in browser
 start http://localhost:3000
 ```
 
 ### Code Quality
 
-```bash
+```powershell
 cargo fmt
 cargo clippy -- -D warnings
 ```
@@ -161,19 +162,19 @@ cargo clippy -- -D warnings
 ### Steps
 
 1. Create a new Heroku app:
-```bash
+```powershell
 heroku create rust-bmi-sdd
 ```
 
 2. Set the buildpack:
-```bash
+```powershell
 heroku buildpacks:set emk/rust
 ```
 
 **Note:**
 Combine 1 & 2 with
 
-```bash
+```powershell
 heroku create rust-bmi-sdd --buildpack emk/rust
 ```
 
@@ -186,7 +187,7 @@ Select and copy the token.
 
 
 4. Deploy on Heroku:
-```bash
+```powershell
 git push heroku main
 ```
 * When the dialog box popup, enter **ANY** name and paste the token.
@@ -194,14 +195,14 @@ git push heroku main
 * Note the URL (for example: https://rust-bmi-sdd-XXXX.herokuapp.com/)
 
 5. Open the app:
-```bash
+```powershell
 heroku open
 ```
 Alternatively point your browser to the previous URL (for example: https://rust-bmi-sdd-XXXX.herokuapp.com/)
 
 **Note:**
 Use
-```bash
+```powershell
 heroku run bash
 ```
 * To check the files deployed on Heroku.
