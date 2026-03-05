@@ -36,7 +36,7 @@ Single project: `src/`, `tests/` at repository root
 - [ ] T002 Write `#[cfg(test)]` unit test module for `BoundedHistory<T>` in `src/domain.rs`: cover `new()` creates empty collection, `push()` adds entry at front, `entries()` returns newest-first, `len()`, `is_empty()`, and FIFO eviction when push exceeds max_size -- tests MUST fail (compile error) before T003
 - [ ] T003 Implement `BoundedHistory<T>` struct in `src/domain.rs`: fields `deque: VecDeque<T>` and `max_size: usize`; impl `new(max_size: usize) -> Self` (with_capacity), `push(&mut self, item: T)` (push_front + pop_back when len > max_size), `entries(&self) -> impl Iterator<Item = &T>` (via deque.iter(), newest-first), `len(&self) -> usize`, `is_empty(&self) -> bool`; derive `Debug`
 - [ ] T004 [P] Add `HistoryEntry` struct in `src/api.rs`: fields `weight_kg: f64`, `height_m: f64`, `bmi: f64`, `category: String`, `timestamp: String`; derive `Debug, Clone, Serialize`
-- [ ] T005 Add `AppState` struct in `src/api.rs`: field `history: std::sync::Mutex<BoundedHistory<HistoryEntry>>`; derive `Debug`; impl `AppState { pub fn new() -> Self { Self { history: Mutex::new(BoundedHistory::new(5)) } } }`
+- [ ] T005 Add `AppState` struct in `src/api.rs`: field `history: std::sync::Arc<std::sync::Mutex<BoundedHistory<HistoryEntry>>>`; derive `Debug, Clone`; impl `AppState { pub fn new() -> Self { Self { history: std::sync::Arc::new(std::sync::Mutex::new(BoundedHistory::new(5))) } } }`
 - [ ] T006 Update `build_router()` in `src/lib.rs`: create `let state = AppState::new()`, attach via `.with_state(state)` -- return type stays `Router` (Router<()> after with_state); import `crate::api::AppState`
 
 **Checkpoint**: Foundation ready -- BoundedHistory unit tests pass, AppState injectable
@@ -52,7 +52,7 @@ Single project: `src/`, `tests/` at repository root
 ### Implementation for User Story 1
 
 - [ ] T007 [US1] Update `BmiResponse` struct in `src/api.rs` to add `history: Vec<HistoryEntry>` field (Serialize already derived)
-- [ ] T008 [US1] Update `bmi_handler` in `src/api.rs`: add `State(state): State<AppState>` parameter; after successful `calculate_bmi`, create `HistoryEntry { weight_kg, height_m, bmi: rounded_bmi, category: category.to_string(), timestamp: chrono::Utc::now().to_rfc3339() }`; lock mutex, push entry, collect `state.history.lock().unwrap().entries().cloned().collect()` into `BmiResponse.history`; add `use chrono::Utc`
+- [ ] T008 [US1] Update `bmi_handler` in `src/api.rs`: add `State(state): State<AppState>` parameter; after successful `calculate_bmi`, create `HistoryEntry { weight_kg, height_m, bmi: rounded_bmi, category: category.to_string(), timestamp: chrono::Utc::now().to_rfc3339() }`; lock mutex, push entry, collect `state.history.lock().unwrap().entries().cloned().collect()` into `BmiResponse.history`; `state` is `State<AppState>` (AppState clones cheaply via Arc); add `use chrono::Utc`
 - [ ] T009 [US1] Update HTML template in `src/ui.rs`: add Bootstrap history table (columns: #, Weight kg, Height m, BMI, Category, Time) populated from `data.history` JS array; hide table when `history.length === 0`, show after successful calculation; insert below existing result display
 - [ ] T010 [US1] Add integration test `history_appears_after_calculation` in `tests/api_test.rs`: POST `{"weight_kg":70.0,"height_m":1.75}`, parse response as `serde_json::Value`, assert `response["history"].as_array().unwrap().len() == 1`, assert `history[0]["weight_kg"] == 70.0`, `history[0]["height_m"] == 1.75`, `history[0]["bmi"]` is a number, `history[0]["category"]` is a string, `history[0]["timestamp"]` is non-empty
 
@@ -95,7 +95,7 @@ Single project: `src/`, `tests/` at repository root
 
 - [ ] T014 [P] Add integration test `failed_validation_does_not_add_history` in `tests/api_test.rs`: POST `{"weight_kg":-1.0,"height_m":1.75}`, assert status 422; then POST valid body and assert `response["history"].as_array().unwrap().len() == 1` (failed request added nothing)
 - [ ] T015 [P] Add `tracing::debug!` calls in `bmi_handler` in `src/api.rs`: one log after push (e.g., `"history entry added, len={}"`) and one when eviction occurs (len exceeded max before push)
-- [ ] T016 Run `cargo clippy -- -D warnings` and fix all reported warnings in `src/domain.rs`, `src/api.rs`, `src/lib.rs`, `src/ui.rs`
+- [ ] T016 Run `cargo fmt -- --check` and fix any formatting issues; then run `cargo clippy -- -D warnings` and fix all reported warnings in `src/domain.rs`, `src/api.rs`, `src/lib.rs`, `src/ui.rs`
 - [ ] T017 Run `cargo test` and confirm all existing tests plus new history tests pass with zero failures in `tests/api_test.rs`
 
 ---

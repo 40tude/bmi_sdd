@@ -36,22 +36,22 @@ Generic bounded FIFO collection. Newest entries at front, evicts oldest when cap
 - `len()` -- current entry count
 - `is_empty()` -- true when empty
 
-### AppState (lib.rs)
+### AppState (api.rs)
 
 Shared application state injected into Axum handlers via `State<AppState>`.
 
 | Field | Type | Notes |
 |-------|------|-------|
-| history | Mutex\<BoundedHistory\<HistoryEntry\>\> | `std::sync::Mutex`. Short lock, no async inside. |
+| history | Arc\<Mutex\<BoundedHistory\<HistoryEntry\>\>\> | `std::sync::Arc<std::sync::Mutex<...>>`. Arc enables Clone; lock held briefly (no .await inside). |
 
-**Derives**: `Clone` (Mutex wrapped in Arc internally or AppState itself is `Arc<AppState>`)
-**Location**: `src/lib.rs`
+**Derives**: `Debug`, `Clone` (Arc is Clone; all clones share the same Mutex)
+**Location**: `src/api.rs` (not lib.rs -- avoids circular import: lib.rs imports api::AppState)
 
 ## Relationships
 
 ```text
-AppState (lib.rs)
-  +-- history: Mutex<BoundedHistory<HistoryEntry>>
+AppState (api.rs)
+  +-- history: Arc<Mutex<BoundedHistory<HistoryEntry>>>
         |
         +-- BoundedHistory<T> (domain.rs) -- generic, framework-free
         |     +-- deque: VecDeque<T>

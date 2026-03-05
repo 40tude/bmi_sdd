@@ -1,17 +1,10 @@
 <!--
 Sync Impact Report
 ===================
-Version change: N/A (initial) -> 1.0.0
-Added principles:
-  - I. Domain Purity
-  - II. Test-Driven Development
-  - III. Clean Layering
-  - IV. Observability
-  - V. Simplicity
-Added sections:
-  - Tech Stack & Constraints
-  - Development Workflow
-  - Governance
+Version change: 1.0.0 -> 1.1.0
+Modified principles:
+  - V. Simplicity: added ephemeral in-memory state exception clause
+Added sections: none
 Removed sections: none
 Templates requiring updates:
   - .specify/templates/plan-template.md: no update needed (Constitution Check is dynamic)
@@ -62,9 +55,24 @@ print statements.
 
 ### V. Simplicity
 
-YAGNI strictly enforced. The application is stateless -- no database, no
-persistence, no authentication, no API versioning. Only build what the
-spec requires. Reject complexity that serves hypothetical future needs.
+YAGNI strictly enforced. The application is stateless by default -- no
+database, no persistence, no authentication, no API versioning. Only
+build what the spec requires. Reject complexity that serves hypothetical
+future needs.
+
+**Exception -- ephemeral in-memory state**: A feature MAY introduce
+server-wide shared state if and only if all three conditions hold:
+
+1. The spec explicitly requires it (the feature cannot be implemented
+   without shared state).
+2. The state is ephemeral -- lost on server restart; no persistence
+   mechanism is added.
+3. The deviation is documented in the plan's Complexity Tracking table
+   with rationale and rejected simpler alternatives.
+
+State introduced under this exception MUST use the simplest viable
+mechanism (e.g., `Arc<Mutex<VecDeque<T>>>`) and MUST NOT expand scope
+beyond what the spec mandates.
 
 ## Tech Stack & Constraints
 
@@ -98,4 +106,4 @@ All code reviews and PRs MUST verify compliance with these principles.
 **Amendment procedure**: Any principle change requires documentation of
 rationale, version bump per semver, and update of this file.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-04 | **Last Amended**: 2026-03-04
+**Version**: 1.1.0 | **Ratified**: 2026-03-04 | **Last Amended**: 2026-03-05
